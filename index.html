@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NHG Yuta | Pro Valorant Player</title>
+  <style>
+    /* ========== TOKENS ========== */
+    :root {
+      --red:        #ff4655;
+      --red-glow:   rgba(255, 70, 85, 0.35);
+      --red-bright: rgba(255, 70, 85, 0.55);
+      --bg:         #07070a;
+      --surface:    rgba(255,255,255,0.045);
+      --border:     rgba(255,255,255,0.09);
+      --text:       #ffffff;
+      --text-muted: #c7c7d1;
+      --text-dim:   #b6b6c2;
+
+      /* Easing — ease-out for enter, ease-in-out for moves */
+      --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-io:     cubic-bezier(0.76, 0, 0.24, 1);
+
+      /* Durations */
+      --dur-xs:  150ms;
+      --dur-sm:  250ms;
+      --dur-md:  380ms;
+      --dur-lg:  600ms;
+    }
+
+    /* ========== RESET ========== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100dvh;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ========== BACKGROUND ========== */
+    #smokeCanvas {
+      position: fixed; inset: 0; z-index: -3;
+      width: 100%; height: 100%;
+      display: block;
+    }
+
+    /* Dark vignette on top of the WebGL canvas to keep text readable */
+    .bg-vignette {
+      position: fixed; inset: 0; z-index: -2;
+      background:
+        radial-gradient(ellipse at 75% 20%, rgba(255,70,85,.18), transparent 40%),
+        radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(5,5,7,.72) 100%),
+        linear-gradient(to bottom, rgba(5,5,7,.55), rgba(5,5,7,.45));
+      pointer-events: none;
+    }
+
+    .grid-overlay {
+      position: fixed; inset: 0; z-index: -1;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+      mask-image: linear-gradient(to bottom, black, transparent 85%);
+    }
+
+    /* ========== SCROLL PROGRESS ========== */
+    .progress {
+      position: fixed; top: 0; left: 0; z-index: 1000;
+      height: 2px; width: 0%;
+      background: var(--red);
+      box-shadow: 0 0 12px var(--red);
+      transition: width 50ms linear;
+    }
+
+    /* ========== HEADER ========== */
+    header {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 22px 7%;
+      background: rgba(7,7,10,.72);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      transition:
+        padding var(--dur-sm) var(--ease-out),
+        background var(--dur-sm) var(--ease-out);
+    }
+    header.scrolled {
+      padding: 13px 7%;
+      background: rgba(7,7,10,.94);
+    }
+
+    .logo { font-size: 1.4rem; font-weight: 900; letter-spacing: 2px; }
+    .logo span { color: var(--red); }
+
+    nav.desktop {
+      display: flex; gap: 28px;
+      font-size: .85rem; text-transform: uppercase; letter-spacing: 1px;
+      color: #cfcfd6;
+    }
+    nav.desktop a {
+      position: relative;
+      transition: color var(--dur-sm) var(--ease-out);
+    }
+    nav.desktop a::after {
+      content: '';
+      position: absolute; bottom: -5px; left: 0;
+      width: 0; height: 1px; background: var(--red);
+      transition: width var(--dur-sm) var(--ease-out);
+    }
+    nav.desktop a:hover { color: var(--red); }
+    nav.desktop a:hover::after { width: 100%; }
+
+    /* Hamburger */
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      background: none; border: none; cursor: pointer; padding: 8px;
+    }
+    .hamburger span {
+      display: block; width: 24px; height: 2px; background: #fff;
+      transition: transform var(--dur-sm) var(--ease-out), opacity var(--dur-sm);
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Mobile nav overlay */
+    .mob-nav {
+      display: none;
+      position: fixed; inset: 0; z-index: 99;
+      flex-direction: column; align-items: center; justify-content: center; gap: 32px;
+      background: rgba(7,7,10,.97);
+      font-size: 1.6rem; text-transform: uppercase; letter-spacing: 3px; font-weight: 900;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--dur-md) var(--ease-out);
+    }
+    .mob-nav.open { opacity: 1; pointer-events: all; }
+    .mob-nav a {
+      color: #cfcfd6;
+      transform: translateY(20px); opacity: 0;
+      transition:
+        color var(--dur-sm) var(--ease-out),
+        transform var(--dur-md) var(--ease-out),
+        opacity var(--dur-md) var(--ease-out);
+    }
+    .mob-nav.open a              { transform: translateY(0); opacity: 1; }
+    .mob-nav.open a:nth-child(1) { transition-delay:  60ms; }
+    .mob-nav.open a:nth-child(2) { transition-delay: 110ms; }
+    .mob-nav.open a:nth-child(3) { transition-delay: 160ms; }
+    .mob-nav.open a:nth-child(4) { transition-delay: 210ms; }
+    .mob-nav.open a:nth-child(5) { transition-delay: 260ms; }
+    .mob-nav a:hover { color: var(--red); }
+
+    /* ========== HERO ========== */
+    .hero {
+      min-height: 100dvh;
+      padding: 150px 7% 70px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      align-items: center;
+      gap: 50px;
+    }
+
+    /* --- Hero enter animations (JS adds .in class) --- */
+    .hero-kicker {
+      color: var(--red);
+      text-transform: uppercase; letter-spacing: 4px;
+      font-size: .9rem; font-weight: 700;
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 12px;
+      opacity: 0; transform: translateX(-30px);
+      transition: opacity var(--dur-md) var(--ease-out), transform var(--dur-md) var(--ease-out);
+    }
+    .hero-kicker::before {
+      content: ''; display: block;
+      width: 40px; height: 1px; background: var(--red); flex-shrink: 0;
+    }
+    .hero-kicker.in { opacity: 1; transform: translateX(0); }
+
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      background: rgba(255,70,85,.12);
+      border: 1px solid rgba(255,70,85,.35);
+      font-size: .7rem; letter-spacing: 2px;
+    }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--red);
+      animation: livePulse 1.6s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .35; transform: scale(.75); }
+    }
+
+    .hero h1 {
+      font-size: clamp(4rem, 10vw, 8.5rem);
+      line-height: .88; text-transform: uppercase;
+      font-weight: 950; letter-spacing: -5px;
+      opacity: 0; transform: translateY(35px);
+      transition: opacity var(--dur-lg) var(--ease-out), transform var(--dur-lg) var(--ease-out);
+      transition-delay: 140ms;
+    }
+    .hero h1.in { opacity: 1; transform: translateY(0); }
+
+    /* Glitch on YUTA */
+    .glitch {
+      color: transparent;
+      -webkit-text-stroke: 2px var(--red);
+      text-shadow: 0 0 35px rgba(255,70,85,.35);
+      position: relative; display: inline-block;
+    }
+    .glitch::before, .glitch::after {
+      content: attr(data-text);
+      position: absolute; top: 0; left: 0;
+      color: transparent; -webkit-text-stroke: 2px var(--red);
+    }
+    .glitch::before {
+      clip-path: polygon(0 0, 100% 0, 100% 38%, 0 38%);
+      animation: g1 5s infinite;
+    }
+    .glitch::after {
+      clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+      animation: g2 5s infinite;
+    }
+    @keyframes g1 {
+      0%,88%,100% { transform: translate(0); opacity: 0; }
+      90% { transform: translate(-4px, 2px); opacity: .75; }
+      93% { transform: translate(3px,-2px); opacity: .75; }
+      95% { transform: translate(0); opacity: 0; }
+    }
+    @keyframes g2 {
+      0%,88%,100% { transform: translate(0); opacity: 0; }
+      91% { transform: translate(4px, 1px); opacity: .6; }
+      94% { transform: translate(-3px,-1px); opacity: .6; }
+      96% { transform: translate(0); opacity: 0; }
+    }
+
+    .hero p {
+      margin-top: 28px; max-width: 560px;
+      color: var(--text-muted); font-size: 1.05rem; line-height: 1.75;
+      opacity: 0; transform: translateY(22px);
+      transition: opacity var(--dur-lg) var(--ease-out), transform var(--dur-lg) var(--ease-out);
+      transition-delay: 260ms;
+    }
+    .hero p.in { opacity: 1; transform: translateY(0); }
+
+    .buttons {
+      display: flex; gap: 16px; margin-top: 36px; flex-wrap: wrap;
+      opacity: 0; transform: translateY(22px);
+      transition: opacity var(--dur-lg) var(--ease-out), transform var(--dur-lg) var(--ease-out);
+      transition-delay: 380ms;
+    }
+    .buttons.in { opacity: 1; transform: translateY(0); }
+
+    .btn {
+      padding: 15px 24px;
+      border: 1px solid var(--border);
+      text-transform: uppercase; letter-spacing: 1px;
+      font-weight: 800; font-size: .85rem;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition:
+        transform var(--dur-sm) var(--ease-out),
+        box-shadow var(--dur-sm) var(--ease-out),
+        background var(--dur-sm) var(--ease-out);
+    }
+    .btn::before {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(255,255,255,.06);
+      transform: translateX(-100%);
+      transition: transform var(--dur-sm) var(--ease-out);
+    }
+    .btn:hover::before { transform: translateX(0); }
+    .btn:active { transform: translateY(-1px) scale(.97) !important; }
+
+    .btn-primary {
+      background: var(--red); color: #fff;
+      border-color: var(--red);
+      box-shadow: 0 0 30px var(--red-glow);
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 50px var(--red-bright), 0 10px 24px rgba(0,0,0,.35);
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,.08);
+      transform: translateY(-3px);
+    }
+
+    /* ========== PLAYER CARD ========== */
+    .player-card {
+      position: relative;
+      min-height: 620px;
+      display: flex; align-items: flex-end; justify-content: center;
+      border: 1px solid rgba(255,255,255,.09);
+      background:
+        linear-gradient(to top, rgba(255,70,85,.16), transparent),
+        radial-gradient(circle at center, rgba(255,70,85,.24), transparent 58%);
+      overflow: hidden;
+      clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
+      opacity: 0; transform: translateX(45px);
+      transition: opacity var(--dur-lg) var(--ease-out), transform var(--dur-lg) var(--ease-out);
+      transition-delay: 180ms;
+    }
+    .player-card.in { opacity: 1; transform: translateX(0); }
+
+    /* Scanline sweep */
+    .player-card::before {
+      content: ''; position: absolute; left: 0; right: 0;
+      top: -40%; height: 40%;
+      background: linear-gradient(to bottom, transparent, rgba(255,70,85,.07), transparent);
+      animation: scanLine 4.5s linear infinite;
+      z-index: 2; pointer-events: none;
+    }
+    @keyframes scanLine {
+      0%   { top: -40%; }
+      100% { top: 140%; }
+    }
+
+    /* Top-right corner accent */
+    .player-card::after {
+      content: ''; position: absolute;
+      top: 18px; right: 18px;
+      width: 22px; height: 22px;
+      border-top: 2px solid var(--red);
+      border-right: 2px solid var(--red);
+      opacity: .7; z-index: 3;
+    }
+
+    .corner-bl {
+      position: absolute; bottom: 18px; left: 18px;
+      width: 22px; height: 22px;
+      border-bottom: 2px solid var(--red);
+      border-left: 2px solid var(--red);
+      opacity: .7; z-index: 3;
+    }
+
+    /* Player photo — real image */
+    .player-photo {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center 12%;
+      display: block;
+      filter: saturate(1.08) contrast(1.04);
+    }
+    /* Bottom fade so agent-tag stays readable */
+    .player-photo-overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background:
+        linear-gradient(to top,  rgba(7,7,10,.85) 0%, rgba(7,7,10,.15) 38%, transparent 65%),
+        linear-gradient(to bottom, rgba(7,7,10,.25) 0%, transparent 22%);
+      pointer-events: none;
+    }
+    /* Fallback placeholder (shown if image fails to load) */
+    .player-silhouette {
+      width: 78%; height: 520px;
+      background: linear-gradient(145deg, #1a1a22, #0b0b10);
+      border: 2px solid rgba(255,255,255,.12);
+      box-shadow: inset 0 0 50px rgba(255,70,85,.15), 0 0 60px rgba(255,70,85,.20);
+      clip-path: polygon(35% 0, 65% 0, 72% 18%, 86% 30%, 82% 100%, 18% 100%, 14% 30%, 28% 18%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .silhouette-label {
+      color: rgba(255,255,255,.18);
+      letter-spacing: 3px; font-weight: 900; font-size: .75rem;
+      text-transform: uppercase;
+    }
+
+    .agent-tag {
+      position: absolute; right: 35px; bottom: 35px; z-index: 4;
+      padding: 10px 16px;
+      background: rgba(255,70,85,.92);
+      font-weight: 900; letter-spacing: 2px;
+      text-transform: uppercase; font-size: .8rem;
+      clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+    }
+
+    /* ========== SECTIONS ========== */
+    section { padding: 90px 7%; }
+
+    .section-title {
+      font-size: clamp(2rem, 4vw, 4rem);
+      text-transform: uppercase; letter-spacing: -2px; margin-bottom: 16px;
+    }
+    .section-title span { color: var(--red); }
+    .section-subtitle { color: var(--text-dim); max-width: 680px; line-height: 1.75; margin-bottom: 42px; }
+
+    /* ========== SCROLL REVEAL SYSTEM ========== */
+    .reveal {
+      opacity: 0; transform: translateY(42px);
+      transition: opacity var(--dur-lg) var(--ease-out), transform var(--dur-lg) var(--ease-out);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    .reveal-l {
+      opacity: 0; transform: translateX(-42px);
+      transition: opacity var(--dur-lg) var(--ease-out), transform var(--dur-lg) var(--ease-out);
+    }
+    .reveal-l.visible { opacity: 1; transform: translateX(0); }
+
+    .reveal-r {
+      opacity: 0; transform: translateX(42px);
+      transition: opacity var(--dur-lg) var(--ease-out), transform var(--dur-lg) var(--ease-out);
+    }
+    .reveal-r.visible { opacity: 1; transform: translateX(0); }
+
+    .reveal-scale {
+      opacity: 0; transform: scale(.92);
+      transition: opacity var(--dur-lg) var(--ease-out), transform var(--dur-lg) var(--ease-out);
+    }
+    .reveal-scale.visible { opacity: 1; transform: scale(1); }
+
+    /* Stagger delays */
+    .d1 { transition-delay:  80ms; }
+    .d2 { transition-delay: 160ms; }
+    .d3 { transition-delay: 240ms; }
+    .d4 { transition-delay: 320ms; }
+
+    /* ========== STATS ========== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 28px;
+      position: relative; overflow: hidden;
+      transition:
+        transform var(--dur-sm) var(--ease-out),
+        border-color var(--dur-sm) var(--ease-out),
+        box-shadow var(--dur-sm) var(--ease-out);
+    }
+    .stat-card::after {
+      content: ''; position: absolute;
+      bottom: 0; left: 0; right: 0; height: 2px;
+      background: var(--red);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform var(--dur-sm) var(--ease-out);
+    }
+    .stat-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255,70,85,.65);
+      box-shadow: 0 0 35px rgba(255,70,85,.13);
+    }
+    .stat-card:hover::after { transform: scaleX(1); }
+
+    /* Neural noise canvas sits behind stat content */
+    .neural-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      opacity: .88;
+    }
+    /* Text content above the canvas */
+    .stat-card > .stat-number,
+    .stat-card > .stat-label { position: relative; z-index: 1; }
+
+    .stat-number {
+      font-size: 2.6rem; font-weight: 950; color: var(--red);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-label {
+      margin-top: 8px; color: #cfcfd6;
+      text-transform: uppercase; letter-spacing: 1px; font-size: .82rem;
+    }
+
+    /* ========== ABOUT ========== */
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: center;
+    }
+    .about-box {
+      padding: 34px;
+      background: linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border: 1px solid var(--border);
+      line-height: 1.8; color: var(--text-muted);
+    }
+
+    .role-list { display: grid; gap: 14px; }
+    .role-item {
+      padding: 22px;
+      border-left: 4px solid var(--red);
+      background: var(--surface);
+      font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+      transition:
+        transform var(--dur-sm) var(--ease-out),
+        background var(--dur-sm) var(--ease-out),
+        border-color var(--dur-sm) var(--ease-out);
+    }
+    .role-item:hover {
+      transform: translateX(10px);
+      background: rgba(255,70,85,.09);
+    }
+
+    /* ========== HIGHLIGHTS ========== */
+    .highlights {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    }
+    .highlight-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 28px;
+      cursor: pointer;
+      transition:
+        transform var(--dur-sm) var(--ease-out),
+        border-color var(--dur-sm) var(--ease-out),
+        box-shadow var(--dur-sm) var(--ease-out);
+    }
+    .highlight-card:hover {
+      transform: translateY(-7px);
+      border-color: rgba(255,70,85,.65);
+      box-shadow: 0 0 38px rgba(255,70,85,.13);
+    }
+
+    .highlight-thumb {
+      height: 190px;
+      background:
+        linear-gradient(135deg, rgba(255,70,85,.75), rgba(8,8,12,.75)),
+        repeating-linear-gradient(45deg, rgba(255,255,255,.08) 0 2px, transparent 2px 10px);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem; font-weight: 950;
+      position: relative; overflow: hidden;
+    }
+    .highlight-thumb::after {
+      content: '▶';
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem;
+      background: rgba(0,0,0,.65);
+      opacity: 0;
+      transition: opacity var(--dur-sm) var(--ease-out);
+    }
+    .highlight-card:hover .highlight-thumb::after { opacity: 1; }
+
+    .highlight-card h3 { margin-top: 20px; font-size: 1.25rem; text-transform: uppercase; }
+    .highlight-card p  { margin-top: 10px; color: var(--text-dim); line-height: 1.6; }
+
+    /* ========== GEAR ========== */
+    .gear-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+
+    .gear-card {
+      min-height: 170px;
+      display: flex; align-items: center; gap: 22px; padding: 30px;
+      background: linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.025));
+      border: 1px solid var(--border);
+      transition:
+        transform var(--dur-sm) var(--ease-out),
+        border-color var(--dur-sm) var(--ease-out),
+        box-shadow var(--dur-sm) var(--ease-out);
+    }
+    .gear-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255,70,85,.65);
+      box-shadow: 0 0 35px rgba(255,70,85,.15);
+    }
+
+    .gear-icon {
+      width: 64px; height: 64px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255,70,85,.45);
+      background: rgba(255,70,85,.12);
+      transition: background var(--dur-sm) var(--ease-out);
+    }
+    .gear-card:hover .gear-icon { background: rgba(255,70,85,.22); }
+
+    .gear-icon svg {
+      width: 28px; height: 28px;
+      fill: none; stroke: var(--red);
+      stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .gear-meta span {
+      display: block; color: var(--red);
+      font-size: .78rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 900;
+    }
+    .gear-meta h3 { margin-top: 7px; font-size: 1.35rem; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ========== CTA ========== */
+    .cta {
+      text-align: center; padding: 120px 7%;
+      background:
+        linear-gradient(rgba(7,7,10,.75), rgba(7,7,10,.9)),
+        radial-gradient(circle at center, rgba(255,70,85,.35), transparent 45%);
+      position: relative; overflow: hidden;
+    }
+    .cta::before {
+      content: ''; position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .cta h2 {
+      font-size: clamp(2.5rem, 7vw, 6rem);
+      text-transform: uppercase; letter-spacing: -3px; position: relative;
+    }
+    .cta p {
+      color: var(--text-muted); max-width: 640px;
+      margin: 24px auto 36px; line-height: 1.75; position: relative;
+    }
+
+    /* ========== FOOTER ========== */
+    footer {
+      padding: 30px 7%;
+      border-top: 1px solid var(--border);
+      color: #8f8f9a;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+
+    /* ========== REDUCED MOTION ========== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+      .reveal, .reveal-l, .reveal-r, .reveal-scale,
+      .hero-kicker, .hero h1, .hero p, .buttons, .player-card {
+        opacity: 1 !important; transform: none !important;
+      }
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 700px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 900px) {
+      nav.desktop { display: none; }
+      .hamburger  { display: flex; }
+      .mob-nav    { display: flex; }
+
+      .hero, .about-grid {
+        grid-template-columns: 1fr;
+      }
+      .player-card { min-height: 460px; }
+      .player-silhouette { height: 380px; }
+
+      .highlights, .gear-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 560px) {
+      .stats-grid, .highlights, .gear-grid { grid-template-columns: 1fr; }
+      .hero h1 { letter-spacing: -2px; }
+    }
+
+    /* ========== COSMOS SCROLL ========== */
+    #cosmos-scroll {
+      height: 300vh;
+      position: relative;
+    }
+    #cosmos-sticky {
+      position: sticky; top: 0;
+      height: 100vh; overflow: hidden;
+      background: #02010a;
+    }
+    #cosmosCanvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; display: block;
+    }
+    .cosmos-word {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(5rem, 18vw, 14rem);
+      font-weight: 950; letter-spacing: -6px;
+      text-transform: uppercase;
+      color: transparent;
+      -webkit-text-stroke: 2px var(--red);
+      text-shadow: 0 0 80px rgba(255,70,85,.55), 0 0 160px rgba(255,70,85,.2);
+      opacity: 0; pointer-events: none; z-index: 2;
+      white-space: nowrap;
+      transition: opacity 60ms linear;
+    }
+    .cosmos-hud {
+      position: absolute; bottom: 36px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; align-items: center; gap: 14px;
+      z-index: 3; color: rgba(255,255,255,.4);
+      font-size: .7rem; letter-spacing: 3px; text-transform: uppercase;
+      pointer-events: none;
+    }
+    .cosmos-hud-track {
+      width: 100px; height: 1px;
+      background: rgba(255,255,255,.12); position: relative;
+    }
+    .cosmos-hud-fill {
+      position: absolute; top: 0; left: 0;
+      height: 100%; width: 0%;
+      background: var(--red);
+      box-shadow: 0 0 8px var(--red);
+    }
+  </style>
+</head>
+<body>
+  <!-- Scroll progress -->
+  <div class="progress" id="progress" role="progressbar" aria-label="Progreso de lectura" aria-valuemin="0" aria-valuemax="100"></div>
+
+  <canvas id="smokeCanvas" aria-hidden="true"></canvas>
+  <div class="bg-vignette" aria-hidden="true"></div>
+  <div class="grid-overlay" aria-hidden="true"></div>
+
+  <!-- Mobile nav -->
+  <nav class="mob-nav" id="mobNav" aria-label="Menú móvil">
+    <a href="#inicio"     onclick="closeMob()">Inicio</a>
+    <a href="#perfil"     onclick="closeMob()">Perfil</a>
+    <a href="#stats"      onclick="closeMob()">Stats</a>
+    <a href="#highlights" onclick="closeMob()">Highlights</a>
+    <a href="#contacto"   onclick="closeMob()">Contacto</a>
+  </nav>
+
+  <header id="header">
+    <div class="logo">NHG<span>YUTA</span></div>
+
+    <nav class="desktop" aria-label="Navegación principal">
+      <a href="#inicio">Inicio</a>
+      <a href="#perfil">Perfil</a>
+      <a href="#stats">Stats</a>
+      <a href="#highlights">Highlights</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+
+    <button class="hamburger" id="hamburger"
+            aria-label="Abrir menú de navegación"
+            aria-expanded="false"
+            aria-controls="mobNav">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <main>
+    <!-- ====== HERO ====== -->
+    <section class="hero" id="inicio" aria-label="Presentación del jugador">
+      <div>
+        <div class="hero-kicker" id="hKicker">
+          Valorant Player
+          <span class="live-badge"><span class="live-dot" aria-hidden="true"></span>LATAM</span>
+        </div>
+
+        <h1 id="hTitle">NHG<br><span class="glitch" data-text="YUTA">YUTA</span></h1>
+
+        <p id="hDesc">
+          Duelista profesional enfocado en precisión, lectura táctica y jugadas de alto impacto.
+          Una marca personal construida para competir, representar equipos y atraer patrocinadores.
+        </p>
+
+        <div class="buttons" id="hBtns">
+          <a class="btn btn-primary" href="#highlights">Ver highlights</a>
+          <a class="btn btn-secondary" href="#contacto">Trabajemos juntos</a>
+        </div>
+      </div>
+
+      <div class="player-card" id="pCard" aria-label="Foto de NHG Yuta">
+        <img
+          src="NHG.png"
+          alt="NHG Yuta — Pro Valorant Player"
+          class="player-photo"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        />
+        <!-- Fallback shown if player.png is missing -->
+        <div class="player-silhouette" style="display:none;" role="img" aria-label="Foto del jugador — placeholder">
+          <span class="silhouette-label" aria-hidden="true">Player Image</span>
+        </div>
+        <div class="player-photo-overlay" aria-hidden="true"></div>
+        <div class="corner-bl" aria-hidden="true"></div>
+        <div class="agent-tag">Duelist Main</div>
+      </div>
+    </section>
+
+    <!-- ====== COSMOS SCROLL ====== -->
+    <div id="cosmos-scroll" aria-hidden="true">
+      <div id="cosmos-sticky">
+        <canvas id="cosmosCanvas"></canvas>
+        <div class="cosmos-word" id="cw1">NHG</div>
+        <div class="cosmos-word" id="cw2">YUTA</div>
+        <div class="cosmos-word" id="cw3">READY</div>
+        <div class="cosmos-hud">
+          <span>SCROLL</span>
+          <div class="cosmos-hud-track">
+            <div class="cosmos-hud-fill" id="cosmosHudFill"></div>
+          </div>
+          <span id="cosmosCounter">01 / 03</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== STATS ====== -->
+    <section id="stats" aria-labelledby="statsH">
+      <h2 class="section-title reveal" id="statsH">Competitive <span>Stats</span></h2>
+      <p class="section-subtitle reveal d1">
+        Métricas visuales rápidas para mostrar rendimiento, experiencia y valor competitivo.
+      </p>
+
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card reveal d1" id="kdCard">
+          <canvas class="neural-canvas" id="neuralCanvas" aria-hidden="true"></canvas>
+          <div class="stat-number" data-target="1.32" data-dec="2">0</div>
+          <div class="stat-label">K/D Ratio</div>
+        </div>
+        <div class="stat-card reveal d2" id="acsCard">
+          <canvas class="neural-canvas" id="neuralCanvas2" aria-hidden="true"></canvas>
+          <div class="stat-number" data-target="284" data-dec="0">0</div>
+          <div class="stat-label">ACS Promedio</div>
+        </div>
+        <div class="stat-card reveal d3" id="hsCard">
+          <canvas class="neural-canvas" id="neuralCanvas3" aria-hidden="true"></canvas>
+          <div class="stat-number" data-target="47" data-dec="0" data-suffix="%">0</div>
+          <div class="stat-label">Headshot Rate</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== PERFIL ====== -->
+    <section id="perfil" aria-labelledby="perfilH">
+      <h2 class="section-title reveal" id="perfilH">Player <span>Profile</span></h2>
+      <p class="section-subtitle reveal d1">
+        Esta sección presenta al jugador como una marca competitiva seria, no solo como gamer.
+      </p>
+
+      <div class="about-grid">
+        <div class="about-box reveal-l">
+          <p>
+            NHG YUTA es un jugador profesional de Valorant especializado en entradas rápidas,
+            control de espacio y definición de rondas decisivas. Su estilo combina agresividad,
+            disciplina táctica y comunicación constante con el equipo.
+          </p>
+          <br>
+          <p>
+            Ideal para equipos competitivos, marcas gaming, torneos, streams y campañas digitales
+            enfocadas en esports de alto impacto.
+          </p>
+        </div>
+
+        <div class="role-list reveal-r">
+          <div class="role-item d1">Main Role: Duelist</div>
+          <div class="role-item d2">Secondary Role: Sentinela</div>
+          <div class="role-item d3">Agents: Reyna / Phoenix / Chamber</div>
+          <div class="role-item d4">Region: LATAM</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== HIGHLIGHTS ====== -->
+    <section id="highlights" aria-labelledby="highlightsH">
+      <h2 class="section-title reveal" id="highlightsH">Match <span>Highlights</span></h2>
+      <p class="section-subtitle reveal d1">
+        Bloques preparados para insertar videos reales de YouTube, Twitch o clips de torneos.
+      </p>
+
+      <div class="highlights">
+        <article class="highlight-card reveal d1">
+          <div class="highlight-thumb" role="img" aria-label="Clip: ACE — 5K Clutch">ACE</div>
+          <h3>5K Clutch</h3>
+          <p>Ronda imposible convertida en victoria con control total del site.</p>
+        </article>
+
+        <article class="highlight-card reveal d2">
+          <div class="highlight-thumb" role="img" aria-label="Clip: 1V3 — Retake Perfecto">1V3</div>
+          <h3>Retake Perfecto</h3>
+          <p>Lectura precisa, paciencia y ejecución limpia bajo presión.</p>
+        </article>
+
+        <article class="highlight-card reveal d3">
+          <div class="highlight-thumb" role="img" aria-label="Clip: MVP — Final Match">MVP</div>
+          <h3>Final Match</h3>
+          <p>Mejor jugador de la serie con impacto constante en rondas clave.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ====== GEAR ====== -->
+    <section id="gear" aria-labelledby="gearH">
+      <h2 class="section-title reveal" id="gearH">Gear <span>Setup</span></h2>
+      <p class="section-subtitle reveal d1">
+        Periféricos oficiales que utiliza NHG Yuta en sus partidas competitivas.
+      </p>
+
+      <div class="gear-grid">
+        <!-- Mouse -->
+        <div class="gear-card reveal d1">
+          <div class="gear-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <rect x="6" y="3" width="12" height="18" rx="6"/>
+              <line x1="12" y1="3" x2="12" y2="10"/>
+              <circle cx="12" cy="14" r="1.5" fill="#ff4655" stroke="none"/>
+            </svg>
+          </div>
+          <div class="gear-meta">
+            <span>Mouse</span>
+            <h3>WL Beast X Pro</h3>
+          </div>
+        </div>
+
+        <!-- Keyboard -->
+        <div class="gear-card reveal d2">
+          <div class="gear-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="6" width="20" height="12" rx="2"/>
+              <line x1="6"  y1="10" x2="6"  y2="10" stroke-width="2.5"/>
+              <line x1="10" y1="10" x2="10" y2="10" stroke-width="2.5"/>
+              <line x1="14" y1="10" x2="14" y2="10" stroke-width="2.5"/>
+              <line x1="18" y1="10" x2="18" y2="10" stroke-width="2.5"/>
+              <line x1="8" y1="14" x2="16" y2="14" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="gear-meta">
+            <span>Teclado</span>
+            <h3>MARS 68 Pro</h3>
+          </div>
+        </div>
+
+        <!-- Headset -->
+        <div class="gear-card reveal d3">
+          <div class="gear-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 12a9 9 0 0 1 18 0"/>
+              <rect x="2"  y="12" width="4" height="6" rx="2"/>
+              <rect x="18" y="12" width="4" height="6" rx="2"/>
+            </svg>
+          </div>
+          <div class="gear-meta">
+            <span>Headset</span>
+            <h3>Sony H9</h3>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== CTA ====== -->
+    <section class="cta" id="contacto" aria-labelledby="ctaH">
+      <h2 class="reveal" id="ctaH">Ready to win?</h2>
+      <p class="reveal d1">
+        Sigue la carrera competitiva, revisa sus mejores jugadas o contacta para oportunidades
+        profesionales, torneos, sponsors y colaboraciones.
+      </p>
+      <div class="buttons reveal d2" style="justify-content:center;">
+        <a class="btn btn-primary"   href="#" aria-label="YouTube de NHG Yuta">YouTube</a>
+        <a class="btn btn-secondary" href="#" aria-label="Twitch de NHG Yuta">Twitch</a>
+        <a class="btn btn-secondary" href="#" aria-label="Instagram de NHG Yuta">Instagram</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 NHG YUTA</p>
+    <p>Professional Valorant Player Landing Page</p>
+  </footer>
+
+  <script>
+    /* ===== SCROLL PROGRESS ===== */
+    const progress = document.getElementById('progress');
+    function updateProgress() {
+      const pct = window.scrollY / (document.body.scrollHeight - innerHeight) * 100;
+      progress.style.width = Math.min(pct, 100) + '%';
+      progress.setAttribute('aria-valuenow', Math.round(pct));
+    }
+
+    /* ===== HEADER SHRINK ===== */
+    const header = document.getElementById('header');
+    function updateHeader() {
+      header.classList.toggle('scrolled', window.scrollY > 60);
+    }
+
+    window.addEventListener('scroll', () => { updateProgress(); updateHeader(); }, { passive: true });
+
+    /* ===== SCROLL REVEAL (IntersectionObserver) ===== */
+    const revealObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          revealObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.reveal, .reveal-l, .reveal-r, .reveal-scale')
+      .forEach(el => revealObs.observe(el));
+
+    /* ===== COUNTER ANIMATION ===== */
+    function animateCounter(el) {
+      const target  = parseFloat(el.dataset.target);
+      const dec     = parseInt(el.dataset.dec ?? '0');
+      const suffix  = el.dataset.suffix ?? '';
+      const dur     = 1600;
+      const t0      = performance.now();
+      const raf = (now) => {
+        const p    = Math.min((now - t0) / dur, 1);
+        const ease = 1 - Math.pow(1 - p, 3); // ease-out cubic
+        el.textContent = (target * ease).toFixed(dec) + suffix;
+        if (p < 1) requestAnimationFrame(raf);
+      };
+      requestAnimationFrame(raf);
+    }
+
+    const counterObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.querySelectorAll('[data-target]').forEach((el, i) => {
+            setTimeout(() => animateCounter(el), i * 110);
+          });
+          counterObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.35 });
+
+    const statsGrid = document.getElementById('statsGrid');
+    if (statsGrid) counterObs.observe(statsGrid);
+
+    /* ===== HERO STAGGER (page load) ===== */
+    const heroItems = [
+      { id: 'hKicker', delay: 120 },
+      { id: 'hTitle',  delay: 260 },
+      { id: 'hDesc',   delay: 410 },
+      { id: 'hBtns',   delay: 560 },
+      { id: 'pCard',   delay: 300 },
+    ];
+    setTimeout(() => {
+      heroItems.forEach(({ id, delay }) => {
+        setTimeout(() => document.getElementById(id)?.classList.add('in'), delay);
+      });
+    }, 80);
+
+    /* ===== MOBILE NAV ===== */
+    const hamburger = document.getElementById('hamburger');
+    const mobNav    = document.getElementById('mobNav');
+    let open = false;
+
+    function toggleMob() {
+      open = !open;
+      hamburger.classList.toggle('open', open);
+      mobNav.classList.toggle('open', open);
+      hamburger.setAttribute('aria-expanded', open);
+      document.body.style.overflow = open ? 'hidden' : '';
+    }
+    function closeMob() {
+      open = false;
+      hamburger.classList.remove('open');
+      mobNav.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+
+    hamburger.addEventListener('click', toggleMob);
+
+    // Close mob nav on Escape
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && open) closeMob(); });
+
+    /* ===== WEBGL SMOKE BACKGROUND ===== */
+    (function () {
+      const VERT = `#version 300 es
+precision highp float;
+in vec4 position;
+void main(){ gl_Position = position; }`;
+
+      const FRAG = `#version 300 es
+precision highp float;
+out vec4 O;
+uniform float time;
+uniform vec2 resolution;
+uniform vec3 u_color;
+#define FC gl_FragCoord.xy
+#define R  resolution
+#define T  (time + 660.)
+
+float rnd(vec2 p){
+  p = fract(p * vec2(12.9898, 78.233));
+  p += dot(p, p + 34.56);
+  return fract(p.x * p.y);
+}
+float noise(vec2 p){
+  vec2 i = floor(p), f = fract(p), u = f*f*(3.-2.*f);
+  return mix(
+    mix(rnd(i), rnd(i+vec2(1,0)), u.x),
+    mix(rnd(i+vec2(0,1)), rnd(i+1.), u.x),
+    u.y);
+}
+float fbm(vec2 p){
+  float t=0., a=1.;
+  for(int i=0;i<5;i++){
+    t += a * noise(p);
+    p *= mat2(1,-1.2,.2,1.2) * 2.;
+    a *= .5;
+  }
+  return t;
+}
+void main(){
+  vec2 uv = (FC - .5*R) / R.y;
+  vec3 col = vec3(1.);
+  uv.x += .25;
+  uv   *= vec2(2., 1.);
+  float n = fbm(uv*.28 - vec2(T*.01, 0.));
+  n = noise(uv*3. + n*2.);
+  col.r -= fbm(uv + vec2(0., T*.015) + n);
+  col.g -= fbm(uv*1.003 + vec2(0., T*.015) + n + .003);
+  col.b -= fbm(uv*1.006 + vec2(0., T*.015) + n + .006);
+  col = mix(col, u_color, dot(col, vec3(.21,.71,.07)));
+  col = mix(vec3(.04), col, min(time*.1, 1.));
+  col = clamp(col, .04, 1.);
+  O = vec4(col, 1.);
+}`;
+
+      const canvas = document.getElementById('smokeCanvas');
+      const gl = canvas.getContext('webgl2');
+      if (!gl) return; // silently skip if WebGL2 unavailable
+
+      function makeShader(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        return s;
+      }
+
+      const prog = gl.createProgram();
+      gl.attachShader(prog, makeShader(gl.VERTEX_SHADER,   VERT));
+      gl.attachShader(prog, makeShader(gl.FRAGMENT_SHADER, FRAG));
+      gl.linkProgram(prog);
+
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,1,-1,-1,1,1,1,-1]), gl.STATIC_DRAW);
+      const posLoc = gl.getAttribLocation(prog, 'position');
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+      const uRes   = gl.getUniformLocation(prog, 'resolution');
+      const uTime  = gl.getUniformLocation(prog, 'time');
+      const uColor = gl.getUniformLocation(prog, 'u_color');
+
+      // Valorant red #ff4655 → (1.0, 0.275, 0.333)
+      const smokeRGB = [1.0, 0.275, 0.333];
+
+      function resize() {
+        const dpr = Math.max(1, devicePixelRatio);
+        canvas.width  = innerWidth  * dpr;
+        canvas.height = innerHeight * dpr;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+      window.addEventListener('resize', resize, { passive: true });
+      resize();
+
+      function loop(now) {
+        gl.useProgram(prog);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.uniform2f(uRes,   canvas.width, canvas.height);
+        gl.uniform1f(uTime,  now * 1e-3);
+        gl.uniform3fv(uColor, smokeRGB);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    })();
+
+    /* ===== NEURAL NOISE — stat cards ===== */
+    (function () {
+      const VS = `
+        precision mediump float;
+        varying vec2 vUv;
+        attribute vec2 a_position;
+        void main() {
+          vUv = 0.5 * (a_position + 1.0);
+          gl_Position = vec4(a_position, 0.0, 1.0);
+        }`;
+      const FS = `
+        precision mediump float;
+        varying vec2 vUv;
+        uniform float u_time;
+        uniform float u_ratio;
+        uniform vec2  u_pointer_position;
+        uniform vec3  u_color;
+        uniform float u_speed;
+        vec2 rot(vec2 uv, float th) {
+          return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv;
+        }
+        float neuro(vec2 uv, float t, float p) {
+          vec2 sa = vec2(0.0), res = vec2(0.0);
+          float sc = 8.0;
+          for (int j = 0; j < 15; j++) {
+            uv = rot(uv, 1.0); sa = rot(sa, 1.0);
+            vec2 layer = uv * sc + float(j) + sa - t;
+            sa  += sin(layer) + 2.4 * p;
+            res += (0.5 + 0.5 * cos(layer)) / sc;
+            sc  *= 1.2;
+          }
+          return res.x + res.y;
+        }
+        void main() {
+          vec2 uv  = 0.5 * vUv;
+          uv.x    *= u_ratio;
+          vec2 ptr = vUv - u_pointer_position;
+          ptr.x   *= u_ratio;
+          float p  = 0.5 * pow(1.0 - clamp(length(ptr), 0.0, 1.0), 2.0);
+          float t  = u_speed * u_time;
+          float n  = neuro(uv, t, p);
+          n = 1.2 * pow(n, 3.0);
+          n += pow(n, 10.0);
+          n = max(0.0, n - 0.5);
+          n *= (1.0 - length(vUv - 0.5));
+          gl_FragColor = vec4(u_color * n, n);
+        }`;
+
+      function initNeuralNoise(canvasId, cardId) {
+        const canvas = document.getElementById(canvasId);
+        const card   = document.getElementById(cardId);
+        if (!canvas || !card) return;
+
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (!gl) return;
+
+        function mkShader(type, src) {
+          const s = gl.createShader(type);
+          gl.shaderSource(s, src); gl.compileShader(s); return s;
+        }
+        const prog = gl.createProgram();
+        gl.attachShader(prog, mkShader(gl.VERTEX_SHADER,   VS));
+        gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, FS));
+        gl.linkProgram(prog); gl.useProgram(prog);
+
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+        const pos = gl.getAttribLocation(prog, 'a_position');
+        gl.enableVertexAttribArray(pos);
+        gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+
+        const u = {};
+        const count = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < count; i++) {
+          const name = gl.getActiveUniform(prog, i).name;
+          u[name] = gl.getUniformLocation(prog, name);
+        }
+
+        gl.uniform3f(u.u_color, 1.0, 0.275, 0.333);
+        gl.uniform1f(u.u_speed, 0.0008);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+        const ptr = { x: 0.5, y: 0.5, tX: 0.5, tY: 0.5 };
+
+        window.addEventListener('pointermove', (e) => {
+          const r = card.getBoundingClientRect();
+          ptr.tX = (e.clientX - r.left) / r.width;
+          ptr.tY = 1 - (e.clientY - r.top) / r.height;
+        }, { passive: true });
+
+        function resize() {
+          const dpr = Math.min(devicePixelRatio, 2);
+          const r   = card.getBoundingClientRect();
+          canvas.width  = r.width  * dpr;
+          canvas.height = r.height * dpr;
+          gl.uniform1f(u.u_ratio, canvas.width / canvas.height);
+          gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+        window.addEventListener('resize', resize, { passive: true });
+        resize();
+
+        function loop() {
+          ptr.x += (ptr.tX - ptr.x) * 0.2;
+          ptr.y += (ptr.tY - ptr.y) * 0.2;
+          gl.uniform1f(u.u_time, performance.now());
+          gl.uniform2f(u.u_pointer_position, ptr.x, ptr.y);
+          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+          requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+      }
+
+      // Init all three stat cards
+      initNeuralNoise('neuralCanvas',  'kdCard');
+      initNeuralNoise('neuralCanvas2', 'acsCard');
+      initNeuralNoise('neuralCanvas3', 'hsCard');
+    })();
+  </script>
+
+  <script>
+  /* ===== COSMOS SCROLL — pure Canvas 2D, no CDN ===== */
+  (function () {
+    const canvas  = document.getElementById('cosmosCanvas');
+    const wrapper = document.getElementById('cosmos-scroll');
+    if (!canvas || !wrapper) return;
+
+    const ctx     = canvas.getContext('2d');
+    const words   = ['cw1','cw2','cw3'].map(id => document.getElementById(id));
+    const hudFill = document.getElementById('cosmosHudFill');
+    const hudCnt  = document.getElementById('cosmosCounter');
+    const ZONES   = [[0,.33],[.33,.66],[.66,1]];
+    const NSEC    = 3;
+    const N       = 900;
+
+    /* deterministic PRNG so stars are stable across resizes */
+    let _s = 42;
+    function rng() { _s = (_s * 1664525 + 1013904223) >>> 0; return _s / 4294967296; }
+
+    let W, H, stars = [];
+
+    function initStars() {
+      W = canvas.width  = canvas.offsetWidth  || innerWidth;
+      H = canvas.height = canvas.offsetHeight || innerHeight;
+      _s = 42;
+      stars = Array.from({ length: N }, () => ({
+        ox:    (rng() - .5) * 3.2,
+        oy:    (rng() - .5) * 3.2,
+        depth: rng() * .85 + .15,
+        r:     rng() * 1.5 + .4,
+        warm:  rng() < .14,
+        tw:    rng() * Math.PI * 2
+      }));
+    }
+
+    function getProgress() {
+      const rect  = wrapper.getBoundingClientRect();
+      const total = wrapper.offsetHeight - innerHeight;
+      return total > 0 ? Math.max(0, Math.min(1, -rect.top / total)) : 0;
+    }
+
+    function wOp(p, s, e) {
+      const F = .08;
+      if (p < s || p > e) return 0;
+      if (p < s + F) return (p - s) / F;
+      if (p > e - F) return (e - p) / F;
+      return 1;
+    }
+
+    function frame(now) {
+      requestAnimationFrame(frame);
+      const p = getProgress();
+      const t = now * .001;
+
+      /* background */
+      ctx.fillStyle = '#02010a';
+      ctx.fillRect(0, 0, W, H);
+
+      /* nebula glow */
+      const ng = ctx.createRadialGradient(W * .5, H * .43, 0, W * .5, H * .43, Math.min(W, H) * (.38 + p * .22));
+      ng.addColorStop(0,   `rgba(255,70,85,${.07 + p * .1})`);
+      ng.addColorStop(.38, `rgba(110,0,12,${.06 + p * .04})`);
+      ng.addColorStop(.72, 'rgba(20,0,4,.025)');
+      ng.addColorStop(1,   'rgba(2,1,10,0)');
+      ctx.fillStyle = ng;
+      ctx.fillRect(0, 0, W, H);
+
+      /* stars — perspective zoom tied to scroll */
+      const cx = W * .5, cy = H * .5;
+      stars.forEach(s => {
+        const z  = s.depth * (1 + p * 3.2);
+        const sx = cx + (s.ox * W) / z;
+        const sy = cy + (s.oy * H) / z;
+        const sr = Math.min((s.r * (.45 + p * 1.1)) / z, 4.5);
+        if (sr < .1 || sx < -6 || sx > W + 6 || sy < -6 || sy > H + 6) return;
+        const tw = .65 + .35 * Math.sin(t * (1.4 + s.depth) + s.tw);
+        const al = Math.min(1, sr * .75 + .28) * tw;
+        ctx.beginPath();
+        ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+        ctx.fillStyle = s.warm ? `rgba(255,165,85,${al})` : `rgba(235,235,255,${al})`;
+        ctx.fill();
+      });
+
+      /* mountain silhouettes */
+      [
+        [.695, .085, .05 + p * .07],
+        [.755, .068, .07 + p * .09],
+        [.808, .052, .09 + p * .11]
+      ].forEach(([yr, hf, a]) => {
+        const by = H * yr, mh = H * hf;
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        const steps = 64;
+        for (let i = 0; i <= steps; i++) {
+          const nx = i / steps;
+          const y  = by - mh * (
+            .45 * Math.sin(nx * 7  + yr * 11) +
+            .30 * Math.sin(nx * 13 + yr * 19) +
+            .25 * Math.sin(nx * 23 + yr *  5)
+          ) * .5 - mh * .5;
+          ctx.lineTo(nx * W, y);
+        }
+        ctx.lineTo(W, H);
+        ctx.closePath();
+        ctx.fillStyle = `rgba(14,1,4,${a})`;
+        ctx.fill();
+      });
+
+      /* horizon glow */
+      const hy = H * (.705 + p * .075);
+      const hg = ctx.createLinearGradient(0, hy - 38, 0, hy + 38);
+      hg.addColorStop(0,   'rgba(255,70,85,0)');
+      hg.addColorStop(.38, `rgba(255,70,85,${.05 + p * .11})`);
+      hg.addColorStop(.5,  `rgba(255,105,105,${.08 + p * .14})`);
+      hg.addColorStop(.62, `rgba(255,70,85,${.05 + p * .11})`);
+      hg.addColorStop(1,   'rgba(255,70,85,0)');
+      ctx.fillStyle = hg;
+      ctx.fillRect(0, hy - 38, W, 76);
+
+      /* words */
+      words.forEach((w, i) => { if (w) w.style.opacity = wOp(p, ZONES[i][0], ZONES[i][1]); });
+
+      /* HUD */
+      if (hudFill) hudFill.style.width = (p * 100) + '%';
+      if (hudCnt) {
+        const sec = Math.min(Math.floor(p * NSEC), NSEC - 1);
+        hudCnt.textContent = `${String(sec + 1).padStart(2, '0')} / 03`;
+      }
+    }
+
+    initStars();
+    window.addEventListener('resize', initStars, { passive: true });
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>
