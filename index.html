@@ -658,9 +658,17 @@
       height: 100vh; overflow: hidden;
       background: #02010a;
     }
+    #cosmosVideo {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0.35;
+      z-index: 0;
+    }
     #cosmosCanvas {
       position: absolute; inset: 0;
       width: 100%; height: 100%; display: block;
+      z-index: 1;
     }
     .cosmos-word {
       position: absolute; top: 50%; left: 50%;
@@ -773,6 +781,7 @@
     <!-- ====== COSMOS SCROLL ====== -->
     <div id="cosmos-scroll" aria-hidden="true">
       <div id="cosmos-sticky">
+        <video id="cosmosVideo" src="yuta.mp4" autoplay loop muted playsinline></video>
         <canvas id="cosmosCanvas"></canvas>
         <div class="cosmos-word" id="cw1">NHG</div>
         <div class="cosmos-word" id="cw2">YUTA</div>
@@ -823,7 +832,7 @@
       <div class="about-grid">
         <div class="about-box reveal-l">
           <p>
-            NHG YUTA es un jugador de Valorant especializado en entradas rápidas,
+            NHG YUTA es un jugador profesional de Valorant especializado en entradas rápidas,
             control de espacio y definición de rondas decisivas. Su estilo combina agresividad,
             disciplina táctica y comunicación constante con el equipo.
           </p>
@@ -835,7 +844,7 @@
         </div>
 
         <div class="role-list reveal-r">
-          <div class="role-item d1">Main Role: Duelista</div>
+          <div class="role-item d1">Main Role: Duelist</div>
           <div class="role-item d2">Secondary Role: Sentinela</div>
           <div class="role-item d3">Agents: Reyna / Phoenix / Chamber</div>
           <div class="role-item d4">Region: LATAM</div>
@@ -1329,8 +1338,7 @@ void main(){
       const t = now * .001;
 
       /* background */
-      ctx.fillStyle = '#02010a';
-      ctx.fillRect(0, 0, W, H);
+      ctx.clearRect(0, 0, W, H);
 
       /* nebula glow */
       const ng = ctx.createRadialGradient(W * .5, H * .43, 0, W * .5, H * .43, Math.min(W, H) * (.38 + p * .22));
