@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -1097,6 +1097,8 @@
       align-items: center;
       gap: 22px;
       padding: 30px;
+      position: relative;
+      overflow: hidden;
       background: linear-gradient(145deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .025));
       border: 1px solid var(--border);
       transition:
@@ -1118,6 +1120,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+      z-index: 1;
       border: 1px solid rgba(255, 70, 85, .45);
       background: rgba(255, 70, 85, .12);
       transition: background var(--dur-sm) var(--ease-out);
@@ -1135,6 +1139,11 @@
       stroke-width: 1.5;
       stroke-linecap: round;
       stroke-linejoin: round;
+    }
+
+    .gear-meta {
+      position: relative;
+      z-index: 1;
     }
 
     .gear-meta span {
@@ -1654,7 +1663,8 @@
 
       <div class="gear-grid">
         <!-- Mouse -->
-        <div class="gear-card reveal d1">
+        <div class="gear-card reveal d1" id="mouseCard">
+          <canvas class="neural-canvas" id="gearCanvas1" aria-hidden="true"></canvas>
           <div class="gear-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
               <rect x="6" y="3" width="12" height="18" rx="6" />
@@ -1669,7 +1679,8 @@
         </div>
 
         <!-- Keyboard -->
-        <div class="gear-card reveal d2">
+        <div class="gear-card reveal d2" id="kbCard">
+          <canvas class="neural-canvas" id="gearCanvas2" aria-hidden="true"></canvas>
           <div class="gear-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
               <rect x="2" y="6" width="20" height="12" rx="2" />
@@ -1687,7 +1698,8 @@
         </div>
 
         <!-- Headset -->
-        <div class="gear-card reveal d3">
+        <div class="gear-card reveal d3" id="headsetCard">
+          <canvas class="neural-canvas" id="gearCanvas3" aria-hidden="true"></canvas>
           <div class="gear-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
               <path d="M3 12a9 9 0 0 1 18 0" />
@@ -1705,7 +1717,7 @@
 
     <!-- ====== CTA ====== -->
     <section class="cta" id="contacto" aria-labelledby="ctaH">
-      <video class="cta-video" src="yuta.mp4" autoplay loop muted playsinline></video>
+      <video class="cta-video" src="valorant.mp4" autoplay loop muted playsinline></video>
       <h2 class="reveal" id="ctaH">Ready to win?</h2>
       <p class="reveal d1">
         Sigue la carrera competitiva, revisa sus mejores jugadas o contacta para oportunidades
@@ -2046,6 +2058,11 @@ void main(){
       initNeuralNoise('neuralCanvas', 'kdCard');
       initNeuralNoise('neuralCanvas2', 'acsCard');
       initNeuralNoise('neuralCanvas3', 'hsCard');
+
+      // Init gear cards
+      initNeuralNoise('gearCanvas1', 'mouseCard');
+      initNeuralNoise('gearCanvas2', 'kbCard');
+      initNeuralNoise('gearCanvas3', 'headsetCard');
     })();
   </script>
 
