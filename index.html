@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -18,7 +18,7 @@
       --text-muted: #c7c7d1;
       --text-dim: #b6b6c2;
 
-      /* Easing — ease-out for enter, ease-in-out for moves */
+      /* Easing â€” ease-out for enter, ease-in-out for moves */
       --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
       --ease-io: cubic-bezier(0.76, 0, 0.24, 1);
 
@@ -166,6 +166,33 @@
 
     nav.desktop a:hover::after {
       width: 100%;
+    }
+
+    /* Music Button */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .music-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      cursor: pointer;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color var(--dur-sm) var(--ease-out), transform var(--dur-sm), border-color var(--dur-sm);
+    }
+
+    .music-btn:hover {
+      color: var(--red);
+      border-color: var(--red);
+      transform: scale(1.05);
     }
 
     /* Hamburger */
@@ -635,7 +662,7 @@
       z-index: 3;
     }
 
-    /* Player photo — real image */
+    /* Player photo â€” real image */
     .player-photo {
       position: absolute;
       inset: 0;
@@ -1182,6 +1209,65 @@
       position: relative;
     }
 
+    /* ========== FLIP LINKS ========== */
+    .flip-links-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .flip-link {
+      position: relative;
+      display: block;
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 950;
+      text-transform: uppercase;
+      line-height: 0.85;
+      color: #ffffff;
+      text-decoration: none;
+      transition: color var(--dur-sm) var(--ease-out);
+    }
+
+    .flip-link:hover {
+      color: var(--red);
+    }
+
+    .flip-link .wrapper-top,
+    .flip-link .wrapper-bottom {
+      display: flex;
+      justify-content: center;
+    }
+
+    .flip-link .wrapper-bottom {
+      position: absolute;
+      inset: 0;
+    }
+
+    .flip-link span {
+      display: inline-block;
+      transition: transform 0.25s ease-in-out;
+    }
+
+    .flip-link .wrapper-top span {
+      transform: translateY(0);
+    }
+
+    .flip-link:hover .wrapper-top span {
+      transform: translateY(-100%);
+    }
+
+    .flip-link .wrapper-bottom span {
+      transform: translateY(100%);
+    }
+
+    .flip-link:hover .wrapper-bottom span {
+      transform: translateY(0);
+    }
+
     /* ========== FOOTER ========== */
     footer {
       padding: 30px 7%;
@@ -1367,7 +1453,7 @@
   <div class="grid-overlay" aria-hidden="true"></div>
 
   <!-- Mobile nav -->
-  <nav class="mob-nav" id="mobNav" aria-label="Menú móvil">
+  <nav class="mob-nav" id="mobNav" aria-label="MenÃº mÃ³vil">
     <a href="#inicio" onclick="closeMob()">Inicio</a>
     <a href="#perfil" onclick="closeMob()">Perfil</a>
     <a href="#stats" onclick="closeMob()">Stats</a>
@@ -1378,7 +1464,7 @@
   <header id="header">
     <div class="logo">NHG<span>YUTA</span></div>
 
-    <nav class="desktop" aria-label="Navegación principal">
+    <nav class="desktop" aria-label="NavegaciÃ³n principal">
       <a href="#inicio">Inicio</a>
       <a href="#perfil">Perfil</a>
       <a href="#stats">Stats</a>
@@ -1386,15 +1472,27 @@
       <a href="#contacto">Contacto</a>
     </nav>
 
-    <button class="hamburger" id="hamburger" aria-label="Abrir menú de navegación" aria-expanded="false"
-      aria-controls="mobNav">
-      <span></span><span></span><span></span>
-    </button>
+    <div class="header-actions">
+      <button id="musicToggle" class="music-btn" aria-label="Toggle Music">
+        <svg id="musicIconOff" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="1" x2="1" y2="23"></line>
+        </svg>
+        <svg id="musicIconOn" style="display: none;" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        </svg>
+      </button>
+      <button class="hamburger" id="hamburger" aria-label="Abrir menÃº de navegaciÃ³n" aria-expanded="false" aria-controls="mobNav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </header>
 
   <main>
     <!-- ====== HERO ====== -->
-    <section class="hero" id="inicio" aria-label="Presentación del jugador">
+    <section class="hero" id="inicio" aria-label="PresentaciÃ³n del jugador">
       <div>
         <div class="hero-kicker" id="hKicker">
           Valorant Player
@@ -1404,7 +1502,7 @@
         <h1 id="hTitle">NHG<br><span class="glitch" data-text="YUTA">YUTA</span></h1>
 
         <p id="hDesc">
-          Duelista enfocado en precisión, lectura táctica y jugadas de alto impacto.
+          Duelista enfocado en precisiÃ³n, lectura tÃ¡ctica y jugadas de alto impacto.
           Una marca personal construida para competir, representar equipos y atraer patrocinadores.
         </p>
 
@@ -1415,10 +1513,10 @@
       </div>
 
       <div class="player-card" id="pCard" aria-label="Foto de NHG Yuta">
-        <img src="NHG.png" alt="NHG Yuta — Pro Valorant Player" class="player-photo"
+        <img src="NHG.png" alt="NHG Yuta â€” Pro Valorant Player" class="player-photo"
           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
         <!-- Fallback shown if player.png is missing -->
-        <div class="player-silhouette" style="display:none;" role="img" aria-label="Foto del jugador — placeholder">
+        <div class="player-silhouette" style="display:none;" role="img" aria-label="Foto del jugador â€” placeholder">
           <span class="silhouette-label" aria-hidden="true">Player Image</span>
         </div>
         <div class="player-photo-overlay" aria-hidden="true"></div>
@@ -1449,7 +1547,7 @@
     <section id="stats" aria-labelledby="statsH">
       <h2 class="section-title reveal" id="statsH">Competitive <span data-text="Stats">Stats</span></h2>
       <p class="section-subtitle reveal d1">
-        Métricas visuales rápidas para mostrar rendimiento, experiencia y valor competitivo.
+        MÃ©tricas visuales rÃ¡pidas para mostrar rendimiento, experiencia y valor competitivo.
       </p>
 
       <div class="stats-grid" id="statsGrid">
@@ -1475,19 +1573,19 @@
     <section id="perfil" aria-labelledby="perfilH">
       <h2 class="section-title reveal" id="perfilH">Player <span data-text="Profile">Profile</span></h2>
       <p class="section-subtitle reveal d1">
-        Esta sección presenta al jugador como una marca competitiva seria, no solo como gamer.
+        Esta secciÃ³n presenta al jugador como una marca competitiva seria, no solo como gamer.
       </p>
 
       <div class="about-grid">
         <div class="about-box reveal-l">
           <p>
-            NHG YUTA es un jugador de Valorant especializado en entradas rápidas,
-            control de espacio y definición de rondas decisivas. Su estilo combina agresividad,
-            disciplina táctica y comunicación constante con el equipo.
+            NHG YUTA es un jugador de Valorant especializado en entradas rÃ¡pidas,
+            control de espacio y definiciÃ³n de rondas decisivas. Su estilo combina agresividad,
+            disciplina tÃ¡ctica y comunicaciÃ³n constante con el equipo.
           </p>
           <br>
           <p>
-            Ideal para equipos competitivos, marcas gaming, torneos, streams y campañas digitales
+            Ideal para equipos competitivos, marcas gaming, torneos, streams y campaÃ±as digitales
             enfocadas en esports de alto impacto.
           </p>
         </div>
@@ -1528,7 +1626,7 @@
             <div class="highlight-icon">1</div>
             <div class="highlight-info">
               <div class="highlight-title">1V3 Retake Perfecto</div>
-              <div class="highlight-desc">Lectura precisa y ejecución limpia.</div>
+              <div class="highlight-desc">Lectura precisa y ejecuciÃ³n limpia.</div>
             </div>
           </div>
         </div>
@@ -1551,7 +1649,7 @@
     <section id="gear" aria-labelledby="gearH">
       <h2 class="section-title reveal" id="gearH">Gear <span data-text="Setup">Setup</span></h2>
       <p class="section-subtitle reveal d1">
-        Periféricos oficiales que utiliza NHG Yuta en sus partidas competitivas.
+        PerifÃ©ricos oficiales que utiliza NHG Yuta en sus partidas competitivas.
       </p>
 
       <div class="gear-grid">
@@ -1613,16 +1711,16 @@
         Sigue la carrera competitiva, revisa sus mejores jugadas o contacta para oportunidades
         profesionales, torneos, sponsors y colaboraciones.
       </p>
-      <div class="buttons reveal d2" style="justify-content:center;">
-        <a class="btn btn-primary" href="#" aria-label="YouTube de NHG Yuta">YouTube</a>
-        <a class="btn btn-twitch" href="#" aria-label="Twitch de NHG Yuta">Twitch</a>
-        <a class="btn btn-secondary" href="#" aria-label="Instagram de NHG Yuta">Instagram</a>
+      <div class="flip-links-container reveal d2">
+        <a href="https://www.youtube.com/@nhgrivals" target="_blank" rel="noopener noreferrer" class="flip-link" aria-label="YouTube de NHG Yuta">YouTube</a>
+        <a href="https://www.youtube.com/@nhgrivals" target="_blank" rel="noopener noreferrer" class="flip-link" aria-label="Twitch de NHG Yuta">Twitch</a>
+        <a href="https://www.youtube.com/@nhgrivals" target="_blank" rel="noopener noreferrer" class="flip-link" aria-label="Instagram de NHG Yuta">Instagram</a>
       </div>
     </section>
   </main>
 
   <footer>
-    <p>© 2026 NHG YUTA</p>
+    <p>Â© 2026 NHG YUTA</p>
     <p>Professional Valorant Player Landing Page</p>
   </footer>
 
@@ -1806,7 +1904,7 @@ void main(){
       const uTime = gl.getUniformLocation(prog, 'time');
       const uColor = gl.getUniformLocation(prog, 'u_color');
 
-      // Valorant red #ff4655 → (1.0, 0.275, 0.333)
+      // Valorant red #ff4655 â†’ (1.0, 0.275, 0.333)
       const smokeRGB = [1.0, 0.275, 0.333];
 
       function resize() {
@@ -1830,7 +1928,7 @@ void main(){
       requestAnimationFrame(loop);
     })();
 
-    /* ===== NEURAL NOISE — stat cards ===== */
+    /* ===== NEURAL NOISE â€” stat cards ===== */
     (function () {
       const VS = `
         precision mediump float;
@@ -1952,7 +2050,7 @@ void main(){
   </script>
 
   <script>
-    /* ===== COSMOS SCROLL — pure Canvas 2D, no CDN ===== */
+    /* ===== COSMOS SCROLL â€” pure Canvas 2D, no CDN ===== */
     (function () {
       const canvas = document.getElementById('cosmosCanvas');
       const wrapper = document.getElementById('cosmos-scroll');
@@ -2017,7 +2115,7 @@ void main(){
         ctx.fillStyle = ng;
         ctx.fillRect(0, 0, W, H);
 
-        /* stars — perspective zoom tied to scroll */
+        /* stars â€” perspective zoom tied to scroll */
         const cx = W * .5, cy = H * .5;
         stars.forEach(s => {
           const z = s.depth * (1 + p * 3.2);
@@ -2099,6 +2197,72 @@ void main(){
       });
     }
   </script>
+
+  <!-- ===== SOUNDCLOUD MUSIC CONTROLS ===== -->
+  <iframe id="sc-widget" src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2167729602&auto_play=true&hide_related=true&show_comments=false&show_user=false&show_reposts=false&visual=false" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" style="opacity: 0; position: absolute; width: 1px; height: 1px; bottom: 0; left: 0; pointer-events: none;"></iframe>
+  <script src="https://w.soundcloud.com/player/api.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const widgetIframe = document.getElementById('sc-widget');
+      const widget = SC.Widget(widgetIframe);
+      const musicBtn = document.getElementById('musicToggle');
+      const iconOn = document.getElementById('musicIconOn');
+      const iconOff = document.getElementById('musicIconOff');
+      
+      let isPlaying = false;
+
+      widget.bind(SC.Widget.Events.READY, () => {
+        widget.setVolume(10); // Baja el volumen inicial al 10%
+        widget.play();
+      });
+
+      widget.bind(SC.Widget.Events.PLAY, () => {
+        isPlaying = true;
+        iconOff.style.display = 'none';
+        iconOn.style.display = 'block';
+      });
+
+      widget.bind(SC.Widget.Events.PAUSE, () => {
+        isPlaying = false;
+        iconOn.style.display = 'none';
+        iconOff.style.display = 'block';
+      });
+
+      musicBtn.addEventListener('click', () => {
+        widget.toggle();
+      });
+    });
+  </script>
+
+  <script>
+    /* ===== FLIP LINKS EFFECT ===== */
+    document.querySelectorAll('.flip-link').forEach(link => {
+      const text = link.textContent.trim();
+      link.textContent = ''; // clear original text
+      
+      const topWrapper = document.createElement('div');
+      topWrapper.className = 'wrapper-top';
+      
+      const bottomWrapper = document.createElement('div');
+      bottomWrapper.className = 'wrapper-bottom';
+      
+      text.split('').forEach((char, i) => {
+        const spanTop = document.createElement('span');
+        spanTop.textContent = char === ' ' ? '\u00A0' : char;
+        spanTop.style.transitionDelay = `${i * 0.025}s`;
+        topWrapper.appendChild(spanTop);
+        
+        const spanBottom = document.createElement('span');
+        spanBottom.textContent = char === ' ' ? '\u00A0' : char;
+        spanBottom.style.transitionDelay = `${i * 0.025}s`;
+        bottomWrapper.appendChild(spanBottom);
+      });
+      
+      link.appendChild(topWrapper);
+      link.appendChild(bottomWrapper);
+    });
+  </script>
+
 </body>
 
 </html>
